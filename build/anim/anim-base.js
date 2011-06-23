@@ -366,12 +366,22 @@ YUI.add('anim-base', function(Y) {
     
     Y.Anim._startTimer = function() {
         if (!_timer) {
-            _timer = setInterval(Y.Anim._runFrame, Y.Anim._intervalTime);
+            _timer = this._requestAnimationFrame(Y.Anim._runFrame);
         }
     };
 
+    Y.Anim._requestAnimationFrame = function() {
+        return window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame       || 
+            window.oRequestAnimationFrame         || 
+            window.msRequestAnimationFrame        || 
+            function(/* function */ callback, /* DOMElement */ element){
+                window.setTimeout(callback, Y.Anim._intervalTime);
+            };
+
+    };
+
     Y.Anim._stopTimer = function() {
-        clearInterval(_timer);
         _timer = 0;
     };
 
@@ -383,6 +393,12 @@ YUI.add('anim-base', function(Y) {
      */    
     Y.Anim._runFrame = function() {
         var done = true;
+        if (!timer) {
+            return;//if the timer has been reset to 0 stop the frames
+        }        
+
+        _timer = Y.Anim._requestAnimationFrame(Y.Anim._runFrame);//running this here to keep a consistent flow going. This way we are not waiting on app logic before we set the next call.
+
         for (var anim in _running) {
             if (_running[anim]._runFrame) {
                 done = false;

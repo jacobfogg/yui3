@@ -365,8 +365,19 @@
     
     Y.Anim._startTimer = function() {
         if (!_timer) {
-            _timer = setInterval(Y.Anim._runFrame, Y.Anim._intervalTime);
+            _timer = this._requestAnimationFrame(Y.Anim._runFrame);
         }
+    };
+
+    Y.Anim._requestAnimationFrame = function() {
+        return window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame       || 
+            window.oRequestAnimationFrame         || 
+            window.msRequestAnimationFrame        || 
+            function(/* function */ callback, /* DOMElement */ element){
+                window.setTimeout(callback, Y.Anim._intervalTime);
+            };
+
     };
 
     Y.Anim._stopTimer = function() {
@@ -382,6 +393,7 @@
      */    
     Y.Anim._runFrame = function() {
         var done = true;
+        _timer = Y.Anim._requestAnimationFrame(Y.Anim._runFrame);
         for (var anim in _running) {
             if (_running[anim]._runFrame) {
                 done = false;
